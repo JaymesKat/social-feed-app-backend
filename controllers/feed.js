@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator')
 const Post = require('../models/post')
-
+const errorWithStatusCode = require('../util/error')
 exports.getPosts = (req, res, next) => {
   res.status(200).json({
     posts: [
@@ -23,7 +23,7 @@ exports.createPost = (req, res, next) => {
   if(!errors.isEmpty()){
     const error = new Error('Validation failed, input is incorrect')
     error.statusCode = 422
-    throw err;
+    throw error;
   }
   const title = req.body.title;
   const content = req.body.content;
@@ -43,9 +43,23 @@ exports.createPost = (req, res, next) => {
     });
 
   }).catch(err => {
-    if(!err.statusCode){
-      err.statusCode = 500
-    }
-    next(err)
+    next(errorWithStatusCode(err))
   })
 };
+
+exports.getPost = ((req, res, next) => {
+  const postId = req.params.postId
+
+  Post.findById(postId)
+    .then(post => {
+      if(!post){
+        const error = new Error('Could not find post')
+        error.statusCode = '404'
+        throw error;
+      }
+      res.status(200).json({ message: 'Post retrieved', post})
+    })
+    .catch(err => {
+      next(errorWithStatusCode(err))
+    })
+})
