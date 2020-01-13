@@ -16,7 +16,8 @@
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
-    "express-validator": "^6.3.1"
+    "express-validator": "^6.3.1",
+    "mongoose": "^5.8.7"
   },
   "devDependencies": {
     "nodemon": "^1.18.4"

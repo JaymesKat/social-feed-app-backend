@@ -1,5 +1,5 @@
 const express = require("express");
-const { check } = require("express-validator");
+const { body } = require("express-validator");
 const feedController = require("../controllers/feed");
 
 const router = express.Router();
@@ -13,7 +13,7 @@ router.post(
   [
     body("title")
       .trim()
-      .isLength({ min: 5 }),
+      .isLength({ min: 10 }),
     body("content")
       .trim()
       .isLength({ min: 5 })
