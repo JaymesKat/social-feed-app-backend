@@ -20,6 +20,15 @@ app.use((req, res, next) => {
 
 app.use('/feed', feedRoutes);
 
+app.use((error, req, res, next) => {
+    console.log(error);
+    const status = error.statusCode || 500;
+    const message = error.message;
+    res.status(status).json({
+        message: message
+    })
+})
+
 mongoose.connect('mongodb://root:cRpZUMjEnWKC0dcB@cluster0-shard-00-00-aylow.mongodb.net:27017,cluster0-shard-00-01-aylow.mongodb.net:27017,cluster0-shard-00-02-aylow.mongodb.net:27017/social_network?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority').then(result => {
     app.listen(8080)
 })
