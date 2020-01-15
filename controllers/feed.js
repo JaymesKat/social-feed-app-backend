@@ -26,7 +26,10 @@ exports.getPosts = (req, res, next) => {
         });
     })
     .catch(err => {
-      next(errorWithStatus(err));
+      if(!err.statusCode){
+        err.statusCode = 500
+      }
+      next(err);
     });
 };
 
@@ -49,24 +52,38 @@ exports.createPost = (req, res, next) => {
 
   const title = req.body.title;
   const content = req.body.content;
-
+  const userId = req.userId;
+  
+  let creator;
   const post = new Post({
     title: title,
     content: content,
     imageUrl: imageUrl,
-    creator: { name: "James" }
+    creator: userId
   });
   // Create post in db
   post
     .save()
     .then(result => {
+      return User.findById(req.userId)
+    })
+    .then(user => {
+      creator = user;
+      user.posts.push(post);
+      return user.save();
+    })
+    .then(result => {
       res.status(201).json({
         message: "Post created successfully!",
-        post: result
-      });
+        post: post,
+        creator: { _id: creator._id, name: creator.name}
+      })
     })
     .catch(err => {
-      next(errorWithStatus(err));
+      if(!err.statusCode){
+        err.statusCode = 500
+      }
+      next(err);
     });
 };
 
@@ -83,7 +100,10 @@ exports.getPost = (req, res, next) => {
       res.status(200).json({ message: "Post retrieved", post });
     })
     .catch(err => {
-      next(errorWithStatus(err));
+      if(!err.statusCode){
+        err.statusCode = 500
+      }
+      next(err);
     });
 };
 

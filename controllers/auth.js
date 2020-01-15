@@ -30,7 +30,10 @@ exports.signup = (req, res, next) => {
       res.status(201).json({ message: "User created", userId: result._id });
     })
     .catch(err => {
-      next(errorWithStatus(err));
+      if(!err.statusCode){
+        err.statusCode = 500
+      }
+      next(err);
     });
 };
 
@@ -69,6 +72,6 @@ exports.login = (req, res, next) => {
         if(!err.statusCode){
             err.statusCode = 500
         }
-      next(err);
+        next(err);
     });
 };
