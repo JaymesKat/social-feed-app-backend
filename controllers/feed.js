@@ -4,37 +4,32 @@ const path = require("path");
 const fs = require("fs");
 const User = require('../models/user')
 
-exports.getPosts = (req, res, next) => {
+exports.getPosts = async (req, res, next) => {
   
   const currentPage = req.query.page || 1;
   const perPage = 2;
   let totalItems;
-  Post.find()
-    .countDocuments()
-    .then(count => {
-      totalItems = count;
-      return Post.find()
-        .skip((currentPage - 1) * perPage)
-        .limit(perPage)
-        .then(posts => {
-          res
-          .status(200)
-          .json({
-            message: "Posts fetched successfully",
-            posts: posts,
-            totalItems
-          });
-        });
-    })
-    .catch(err => {
-      if(!err.statusCode){
-        err.statusCode = 500
-      }
-      next(err);
-    });
+  try {
+    const count = await Post.find().countDocuments();
+    totalItems = count;
+    const posts = await Post.find().skip((currentPage - 1) * perPage).limit(perPage);
+          
+    res.status(200)
+      .json({
+        message: "Posts fetched successfully",
+        posts: posts,
+        totalItems,
+      })
+  }
+  catch(err) {
+    if(!err.statusCode){
+      err.statusCode = 500
+    }
+    next(err);
+  }
 };
 
-exports.createPost = (req, res, next) => {
+exports.createPost = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const error = new Error("Validation failed, input is incorrect");
@@ -62,53 +57,52 @@ exports.createPost = (req, res, next) => {
     imageUrl: imageUrl,
     creator: userId
   });
-  // Create post in db
-  post
-    .save()
-    .then(result => {
-      return User.findById(req.userId)
+  
+  const result = post.save()
+  
+  try{
+    const user = await User.findById(req.userId)
+   
+    creator = user;
+    user.posts.push(post);
+    await user.save();
+  
+    res.status(201).json({
+      message: "Post created successfully!",
+      post: post,
+      creator: { _id: creator._id, name: creator.name}
     })
-    .then(user => {
-      creator = user;
-      user.posts.push(post);
-      return user.save();
-    })
-    .then(result => {
-      res.status(201).json({
-        message: "Post created successfully!",
-        post: post,
-        creator: { _id: creator._id, name: creator.name}
-      })
-    })
-    .catch(err => {
+
+  } catch(err){
       if(!err.statusCode){
         err.statusCode = 500
       }
       next(err);
-    });
+    }
 };
 
-exports.getPost = (req, res, next) => {
+exports.getPost = async (req, res, next) => {
   const postId = req.params.postId;
 
-  Post.findById(postId)
-    .then(post => {
-      if (!post) {
-        const error = new Error("Could not find post");
-        error.statusCode = "404";
-        throw error;
-      }
-      res.status(200).json({ message: "Post retrieved", post });
-    })
-    .catch(err => {
-      if(!err.statusCode){
-        err.statusCode = 500
-      }
-      next(err);
-    });
+  try{
+    const post = await Post.findById(postId)
+    
+    if (!post) {
+      const error = new Error("Could not find post");
+      error.statusCode = "404";
+      throw error;
+    }
+    res.status(200).json({ message: "Post retrieved", post });
+  } 
+  catch(err) {
+    if(!err.statusCode){
+      err.statusCode = 500
+    }
+    next(err);
+  }
 };
 
-exports.updatePost = (req, res, next) => {
+exports.updatePost = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const error = new Error("Validation failed, input is incorrect");
@@ -128,10 +122,9 @@ exports.updatePost = (req, res, next) => {
     error.statusCode = 422;
     throw error;
   }
-
-  Post.findById(postId)
-    .then(post => {
-      if (!post) {
+  try{
+    const post = await Post.findById(postId)
+    if (!post) {
         const error = new Error("Could not retrieve post");
         error.statusCode = 500;
         throw error;
@@ -142,43 +135,39 @@ exports.updatePost = (req, res, next) => {
       post.title = title;
       post.content = content;
       post.imageUrl = imageUrl;
-      return post.save();
-    })
-    .then(result => {
+      const result = await post.save();
       res.status(200).json({ message: "Post updated", post: result });
-    })
-    .catch(err => {
-      if (!err.statusCode) {
-        err.statusCode = 500;
-      }
-      next(err);
-    });
+  }
+  catch(err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
 };
 
-exports.deletePost = (req, res, next) => {
+exports.deletePost = async (req, res, next) => {
   const postId = req.params.postId;
-  Post.findById(postId)
-    .then(post => {
-      if (!post) {
-        const error = new Error("Could not retrieve post");
-        error.statusCode = 500;
-        throw error;
-      }
+  try {
+    const post = await Post.findById(postId)
+    if (!post) {
+      const error = new Error("Could not retrieve post");
+      error.statusCode = 500;
+      throw error;
+    }
 
-      // Check for user
-      clearImage(post.imageUrl);
-      return Post.findByIdAndRemove(postId);
-    })
-    .then(result => {
-      res.status(200).json({ message: "Post deleted" });
-    })
-    .catch(err => {
+    // Check for user
+    clearImage(post.imageUrl);
+    await Post.findByIdAndRemove(postId);
+    res.status(200).json({ message: "Post deleted" });
+  }
+ catch(err) {
       if (!err.statusCode) {
         err.statusCode = 500;
       }
       next(err);
-    });
-};
+    }
+}
 
 const clearImage = imagePath => {
   let filePath = path.join(__dirname, "..", imagePath);
