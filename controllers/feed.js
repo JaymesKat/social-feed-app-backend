@@ -2,9 +2,10 @@ const { validationResult } = require("express-validator");
 const Post = require("../models/post");
 const path = require("path");
 const fs = require("fs");
-const errorWithStatus = require("../util/error");
+const User = require('../models/user')
 
 exports.getPosts = (req, res, next) => {
+  
   const currentPage = req.query.page || 1;
   const perPage = 2;
   let totalItems;

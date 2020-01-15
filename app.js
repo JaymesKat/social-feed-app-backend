@@ -5,7 +5,8 @@ const path = require("path");
 const multer = require("multer");
 
 const feedRoutes = require("./routes/feed");
-const authRoutes = require("./routes/user");
+const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/auth");
 
 const app = express();
 

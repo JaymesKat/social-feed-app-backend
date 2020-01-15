@@ -1,13 +1,12 @@
-const User = require("../models/user");
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const errorWithStatus = require("../util/error");
+const User = require("../models/user");
 
 exports.signup = (req, res, next) => {
   const errors = validationResult(req);
-  console.log(req.body);
+  
   if (!errors.isEmpty()) {
     const error = new Error("Validation failed");
     error.statusCode = 422;
