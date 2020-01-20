@@ -10,6 +10,8 @@ const userRoutes = require("./routes/auth");
 
 const app = express();
 
+require('dotenv').config()
+
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "images");
@@ -63,8 +65,7 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(
-    "mongodb://root:cRpZUMjEnWKC0dcB@cluster0-shard-00-00-aylow.mongodb.net:27017,cluster0-shard-00-01-aylow.mongodb.net:27017,cluster0-shard-00-02-aylow.mongodb.net:27017/social_network?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority"
-  )
+    process.env.MONGO_URI)
   .then(result => {
     app.listen(8080);
   });
