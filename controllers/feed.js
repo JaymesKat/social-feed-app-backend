@@ -14,7 +14,7 @@ exports.getPosts = async (req, res, next) => {
   try {
     const count = await Post.find().countDocuments();
     totalItems = count;
-    const posts = await Post.find().populate('creator').skip((currentPage - 1) * perPage).limit(perPage);
+    const posts = await Post.find().populate('creator').sort({ createdAt: -1}).skip((currentPage - 1) * perPage).limit(perPage);
           
     res.status(200)
       .json({
@@ -125,10 +125,16 @@ exports.updatePost = async (req, res, next) => {
     throw error;
   }
   try{
-    const post = await Post.findById(postId)
+    const post = await Post.findById(postId).populate('creator')
     if (!post) {
         const error = new Error("Could not retrieve post");
         error.statusCode = 500;
+        throw error;
+      }
+
+      if(post.creator._id.toString() !== req.userId){
+        const error = new Error('Not authorized to access this post');
+        error.statusCode = 403;
         throw error;
       }
       if (imageUrl != post.imageUrl) {
@@ -138,6 +144,7 @@ exports.updatePost = async (req, res, next) => {
       post.content = content;
       post.imageUrl = imageUrl;
       const result = await post.save();
+      io.getIO().emit('posts', { action: 'update', post: result })
       res.status(200).json({ message: "Post updated", post: result });
   }
   catch(err) {
@@ -161,6 +168,13 @@ exports.deletePost = async (req, res, next) => {
     // Check for user
     clearImage(post.imageUrl);
     await Post.findByIdAndRemove(postId);
+
+    const user = await User.findById(req.userId);
+    user.posts.pull(postId);
+    await user.save();
+
+    io.getIO().emit('posts', { action: 'delete' });
+
     res.status(200).json({ message: "Post deleted" });
   }
  catch(err) {

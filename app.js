@@ -3,10 +3,12 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const path = require("path");
 const multer = require("multer");
+const graphqlHttp = require('express-graphql');
+const clearImage = require('./utils/image');
+const auth = require('./middleware/auth');
 
-const feedRoutes = require("./routes/feed");
-const authRoutes = require("./routes/auth");
-const userRoutes = require("./routes/auth");
+const graphqlHttpSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolvers');
 
 const app = express();
 
@@ -40,18 +42,53 @@ app.use(
 );
 
 app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader(
-        "Access-Control-Allow-Methods",
-        "OPTIONS, GET, POST, PUT, PATCH, DELETE"
-        );
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        next();
-    });
-    
-app.use("/feed", feedRoutes);
-app.use("/auth", authRoutes);
-app.use("/user", userRoutes);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+      "Access-Control-Allow-Methods",
+      "OPTIONS, GET, POST, PUT, PATCH, DELETE"
+      );
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      if(req.method == 'OPTIONS'){
+        return res.sendStatus(200);
+      }
+      next();
+  });
+
+app.use(auth);
+
+app.use(
+	"/graphql",
+	graphqlHttp({
+		schema: graphqlHttpSchema,
+		rootValue: graphqlResolver,
+		graphiql: true,
+		customFormatErrorFn(err) {
+			if (!err.originalError) {
+				return err;
+			}
+			const data = err.originalError.data;
+			const message = err.message || "An error ocurred";
+			const code = err.originalError.code || 500;
+			return { message, status: code, data };
+		}
+	})
+);
+
+app.put('/upload-image', (req, res, next) => {
+  if(!req.isAuth){
+    const error = new Error('Not authenticated');
+    error.code = 401;
+    throw new error;
+  }
+  if(!req.file){
+    return res.status(200).json({ message: 'No file uploaded' });
+  }
+
+  if(req.body.oldPath){
+    clearImage(req.body.oldPath);
+  }  
+  return res.status(201).json({ message: 'File uploaded', filePath: req.file.path });
+});
 
 app.use((error, req, res, next) => {
   const status = error.statusCode || 500;
@@ -67,10 +104,6 @@ mongoose
   .connect(
     process.env.MONGO_URI)
   .then(result => {
-    const server = app.listen(8080);
-    const io = require('./socket').init(server);
-    io.on('connection', socket => {
-      console.log('Client connected');
-    })
+    app.listen(8080);
   })
   .catch(err => console.log(err));
