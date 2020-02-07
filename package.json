@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "start": "nodemon app.js",
-    "coverage": "jest --coverage"
+    "coverage": "jest --coverage",
+    "prettify": "prettier **/*.js --write"
   },
   "repository": {
     "type": "git",
@@ -31,12 +32,15 @@
   "devDependencies": {
     "jest": "^25.1.0",
     "nodemon": "^1.18.4",
+    "prettier": "^1.19.1",
     "supertest": "^4.0.2"
   },
   "jest": {
     "testEnvironment": "node",
     "coverageDirectory": "coverage",
-    "collectCoverageFrom" : ["**/.*\\.js"],
+    "collectCoverageFrom": [
+      "**/.*\\.js"
+    ],
     "collectCoverage": true,
     "coveragePathIgnorePatterns": [
       "/node_modules/",
