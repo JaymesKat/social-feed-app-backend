@@ -1,5 +1,4 @@
-const { buildSchema }  = require('graphql');
-
+const { buildSchema } = require('graphql')
 
 module.exports = buildSchema(`
     type Post {
@@ -60,4 +59,4 @@ module.exports = buildSchema(`
         query: RootQuery
         mutation: RootMutation
     }
-`);
+`)
