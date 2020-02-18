@@ -5,7 +5,8 @@ const User = require('../models/user')
  * @param {string} id user id to find.
  */
 module.exports.findById = async id => {
-	return await User.findById(id)
+	const user = await User.findById(id)
+	return user
 }
 
 /**
@@ -13,7 +14,8 @@ module.exports.findById = async id => {
  * @param {string} email user email to find.
  */
 module.exports.findByEmail = async email => {
-	return await User.findOne({ email: email })
+	const user = await User.findOne({ email: email })
+	return user
 }
 
 /**
@@ -21,13 +23,9 @@ module.exports.findByEmail = async email => {
  * @param {Object} post post object to create.
  * @throws {Error} If the post is not provided.
  */
-module.exports.save = async (user) => {
-	if (!user) {
-		const error = new Error('Missing user')
-		error.code = 500
-		throw error
-	}
-	return await user.save();
+module.exports.save = async user => {
+	const newUser = await user.save()
+	return newUser
 }
 
 /**
@@ -37,7 +35,8 @@ module.exports.save = async (user) => {
  */
 module.exports.addPost = async (user, post) => {
 	user.posts.push(post)
-	return await user.save()
+	const savedUser = await user.save()
+	return savedUser
 }
 
 /**
@@ -47,5 +46,6 @@ module.exports.addPost = async (user, post) => {
  */
 module.exports.removePost = async (user, postId) => {
 	user.posts.pull(postId)
-	return await user.save()
+	const savedUser = await user.save()
+	return savedUser
 }

@@ -21,15 +21,6 @@ module.exports.getTotalPosts = async () => {
 	return await Post.find().countDocuments()
 }
 
-
-/**
- * Get posts by id.
- * @param {integer} postId id of post to fetch.
- */
-module.exports.findById = async postId => {
-	return await Post.findById(postId).populate('creator')
-}
-
 /**
  * Saves a post in the database.
  * @param {Object} post post object to create.

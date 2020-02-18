@@ -27,20 +27,23 @@ module.exports = {
 			error.code = 422
 			throw error
 		}
-		const existingUser = await PostsService.findByEmail(userInput.email)
-		
+		const existingUser = await UsersService.findByEmail(userInput.email)
+
 		if (existingUser) {
 			const error = new Error('User already exists')
 			error.code = 422
 			throw error
 		}
-		const hashedPass = await bcrypt.hash(userInput.password, SALT_ROUNDS)
+		const hashedPass = await bcrypt.hash(
+			userInput.password,
+			bcrypt.genSaltSync(SALT_ROUNDS)
+		)
 		const user = User({
 			email: userInput.email,
 			name: userInput.name,
 			password: hashedPass
 		})
-		const createdUser = await UsersService.save()
+		const createdUser = await UsersService.save(user)
 		return { ...createdUser._doc, _id: createdUser._id.toString() }
 	},
 	login: async function({ email, password }) {
