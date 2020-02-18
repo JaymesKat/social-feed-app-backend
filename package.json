@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "nodemon app.js",
+    "start": "nodemon index.js",
     "coverage": "jest --coverage",
     "prettify": "prettier **/*.js --write"
   },

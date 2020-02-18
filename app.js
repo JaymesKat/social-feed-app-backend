@@ -1,6 +1,5 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const mongoose = require('mongoose')
 const path = require('path')
 const multer = require('multer')
 const graphqlHttp = require('express-graphql')
@@ -103,10 +102,3 @@ app.use((error, req, res, next) => {
 })
 
 module.exports = app
-
-mongoose
-	.connect(process.env.MONGO_URI)
-	.then(result => {
-		app.listen(8080)
-	})
-	.catch(err => console.log(err))
